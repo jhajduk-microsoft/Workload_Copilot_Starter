@@ -12,6 +12,8 @@ resourceGroupName=$RESOURCEGROUP
 resourceName=$AOAINAME
 location=$LOCATION
 hubname=$HUBNAME
+hubskuname=$HUB_SKU_NAME
+projectName=$PROJECT_NAME
 embeddingname=$AZURE_OPENAI_EMBEDDING_DEPLOYMENT
 embeddingmodelversion=$AZURE_OPENAI_EMBEDDING_MODEL_VERSION
 completionname=$AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME
@@ -40,63 +42,49 @@ if [ "$1" == "setup" ]; then
         fi
     fi
 
-    # Check if OpenAI resource exists
-    if az cognitiveservices account show --name $resourceName --resource-group $resourceGroupName &>/dev/null; then
-        echo "OpenAI resource $resourceName already exists"
+    # Check if Azure AI Hub resource exists
+    if az ml workspace show --name $hubname --resource-group $resourceGroupName &>/dev/null; then
+        echo "Azure AI Hub resource $hubname already exists"
     else
-        # Create Azure OpenAI resource
-        if ! az cognitiveservices account create \
-            --name $resourceName \
+        # Create Azure AI Hub resource
+        if ! az ml workspace create \
             --resource-group $resourceGroupName \
-            --location $location \
-            --kind OpenAI \
-            --sku S0 \
-            --subscription $subscriptionID; then
-            echo "Failed to create OpenAI resource"
+            --name $hubname \
+            --kind hub; then
+            echo "Failed to create Azure AI Hub resource"
             exit 1
         fi
     fi
 
-    # Check if embedding model deployment exists
-    if az cognitiveservices account deployment show \
-        --resource-group $resourceGroupName \
-        --name $resourceName \
-        --deployment-name "deploy_ada" &>/dev/null; then
-        echo "Embedding model deployment already exists"
+    # Check if project resource exists
+    if az ml project show --name $projectName --workspace-name $hubname --resource-group $resourceGroupName &>/dev/null; then
+        echo "Project resource $projectName already exists"
     else
-        # Deploy embedding model
-        if ! az cognitiveservices account deployment create \
-            --resource-group $resourceGroupName \
-            --name $resourceName \
-            --deployment-name "deploy_ada" \
-            --model-name $embeddingname \
-            --model-version $embeddingmodelversion \
-            --model-format OpenAI \
-            --sku-capacity "1" \
-            --sku-name "Standard"; then
-            echo "Failed to deploy embedding model"
+        # Create project resource
+        if ! az ml project create \
+            --name $projectName \
+            --workspace-name $hubname \
+            --resource-group $resourceGroupName; then
+            echo "Failed to create project resource"
             exit 1
         fi
     fi
 
-    # Check if completion model deployment exists
-    if az cognitiveservices account deployment show \
-        --resource-group $resourceGroupName \
-        --name $resourceName \
-        --deployment-name $completionname &>/dev/null; then
-        echo "Completion model deployment already exists"
+    # Check if connection exists
+    if az ml project connection show \
+        --name $connectionName \
+        --workspace-name $hubname \
+        --resource-group $resourceGroupName &>/dev/null; then
+        echo "Connection $connectionName already exists"
     else
-        # Deploy completion model
-        if ! az cognitiveservices account deployment create \
+        # Create connection
+        if ! az ml project connection create \
+            --name $connectionName \
+            --workspace-name $hubname \
             --resource-group $resourceGroupName \
-            --name $resourceName \
-            --deployment-name $completionname \
-            --model-name $completionname \
-            --model-version $completionmodelversion \
-            --model-format OpenAI \
-            --sku-capacity "1" \
-            --sku-name "Standard"; then
-            echo "Failed to deploy completion model"
+            --type azure_search \
+            --properties "{\"endpoint\":\"$searchEndpoint\",\"adminKey\":\"$searchAdminKey\"}"; then
+            echo "Failed to create connection"
             exit 1
         fi
     fi
@@ -122,18 +110,32 @@ fi
 if [ "$1" == "destroy" ]; then
     # Destroy resources
     echo "Destroying resources..."
-    
-    # Delete ML workspace
-    if az ml workspace show \
-        --resource-group $resourceGroupName \
-        --name $hubname &>/dev/null; then
-        az ml workspace delete \
-            --resource-group $resourceGroupName \
-            --name $hubname
 
-        echo "ML workspace $hubname deleted"
+    # Delete the Azure AI Search connection
+    if az ml project connection show \
+        --name $connectionName \
+        --workspace-name $hubname \
+        --resource-group $resourceGroupName &>/dev/null; then
+        az ml project connection delete \
+            --name $connectionName \
+            --workspace-name $hubname \
+            --resource-group $resourceGroupName
+
+        echo "Azure AI Search connection deleted"
     else
-        echo "ML workspace $hubname does not exist"
+        echo "Azure AI Search connection does not exist"
+    fi
+
+    # Delete project resource
+    if az ml project show --name $projectName --workspace-name $hubname --resource-group $resourceGroupName &>/dev/null; then
+        az ml project delete \
+            --name $projectName \
+            --workspace-name $hubname \
+            --resource-group $resourceGroupName
+
+        echo "Project resource $projectName deleted"
+    else
+        echo "Project resource $projectName does not exist"
     fi
 
     # Delete Azure AI Search deployment
@@ -247,7 +249,5 @@ if ! grep -q "SEARCH_ADMIN_KEY=" ../.env; then
     echo "SEARCH_ADMIN_KEY=$searchAdminKey" >> ../.env
 fi
 
-
-#az ml connection create --file {connection.yml} --resource-group $resourceGroupName --workspace-name $hubname 
 
 echo "Script completed successfully"
