@@ -32,5 +32,4 @@ Use the setup parameter to deploy the resources and use the destroy parameter to
 ```bash
 ./setup.sh setup
 
-```bash
 ./setup.sh destroy
