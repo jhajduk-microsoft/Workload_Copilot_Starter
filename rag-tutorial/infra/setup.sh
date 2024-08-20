@@ -248,8 +248,6 @@ if ! grep -q "SEARCH_ADMIN_KEY=" ../.env; then
 fi
 
 
-#python connection_helper.py
-
 #az ml connection create --file {connection.yml} --resource-group $resourceGroupName --workspace-name $hubname 
 
 echo "Script completed successfully"
