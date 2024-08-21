@@ -21,6 +21,9 @@ completionName=$AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME
 completionModelVersion=$AZURE_OPENAI_COMPLETION_VERSION_NAME
 searchName=$AZURE_AI_SEARCH_NAME
 searchServiceSku=$SEARCH_SERVICE_SKU
+storageAccountName=$STORAGE_ACCOUNT_NAME
+storageAccountSku=$STORAGE_ACCOUNT_SKU
+storageAccountKind=$STORAGE_ACCOUNT_KIND
 
 # Sign in to Azure CLI
 az config set core.login_experience_v2=off
@@ -152,6 +155,25 @@ if [ "$1" == "setup" ]; then
             exit 1
         fi
     fi
+
+    # Check if storage account exists
+    if az storage account show --name $storageAccountName --resource-group $resourceGroupName &>/dev/null; then
+        echo "Storage account $storageAccountName already exists"
+    else
+        # Create storage account
+        echo "Creating storage account"
+        if ! az storage account create \
+            --name "$storageAccountName$(date +%s)" \
+            --resource-group $resourceGroupName \
+            --location $location \
+            --sku $storageAccountSku \
+            --kind $storageAccountKind \
+            --https-only true \
+            --default-action Deny; then
+            echo "Failed to create storage account"
+            exit 1
+        fi
+    fi
 fi
 
 # Check if the flag is set to destroy resources
@@ -242,14 +264,14 @@ if [ "$1" == "destroy" ]; then
 fi
 
 # Retrieve the REST API endpoint URL if it does not already exist
-if ! grep -q "AOAI_ENDPOINT=" ../.env; then
+if ! grep -q "AZURE_OPENAI_ENDPOINT=" ../.env; then
     AOAIendpoint=$(az cognitiveservices account show --name $resourceName --resource-group $resourceGroupName --query "properties.endpoint" -o tsv)
     if [ $? -ne 0 ]; then
         echo "Failed to retrieve AOAI endpoint URL"
         exit 1
     fi
     echo >> ../.env
-    echo "AOAI_ENDPOINT=$AOAIendpoint" >> ../.env
+    echo "AZURE_OPENAI_ENDPOINT=$AOAIendpoint" >> ../.env
 fi
 
 # Retrieve the primary API key if it does not already exist
@@ -263,13 +285,13 @@ if ! grep -q "AOAI_API_KEY=" ../.env; then
 fi
 
 # Retrieve the endpoint for Azure AI Search if it does not already exist
-if ! grep -q "SEARCH_ENDPOINT=" ../.env; then
+if ! grep -q "AZURE_SEARCH_ENDPOINT=" ../.env; then
     searchEndpoint=$(az search service show --name $searchName --resource-group $resourceGroupName --query "properties.url" -o tsv)
     if [ $? -ne 0 ]; then
         echo "Failed to retrieve Azure AI Search endpoint"
         exit 1
     fi
-    echo "SEARCH_ENDPOINT=https://$searchName.search.windows.net" >> ../.env
+    echo "AZURE_SEARCH_ENDPOINT=https://$searchName.search.windows.net" >> ../.env
 fi
 
 # Retrieve the admin key for Azure AI Search if it does not already exist
@@ -281,5 +303,16 @@ if ! grep -q "SEARCH_ADMIN_KEY=" ../.env; then
     fi
     echo "SEARCH_ADMIN_KEY=$searchAdminKey" >> ../.env
 fi
+
+if ! grep -q "STORAGE_ACCOUNT_KEY=" ../.env; then
+    storageAccountName=$(az storage account list --resource-group $resourceGroupName --query "[?contains(name, '$storageAccountName')].[name]" --output tsv)
+    storageAccountKey=$(az storage account keys list --account-name "$storageAccountName" --resource-group $resourceGroupName --query '[0].value' -o tsv)
+    if [ $? -ne 0 ]; then
+        echo "Failed to retrieve storage account key"
+        exit 1
+    fi
+    echo "STORAGE_ACCOUNT_KEY=$storageAccountKey" >> ../.env
+fi
+
 
 echo "Script completed successfully"
