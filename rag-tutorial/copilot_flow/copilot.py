@@ -22,7 +22,7 @@ def get_documents(search_query: str, num_docs=3):
 
     #  retrieve documents relevant to the user's question from Cognitive Search
     search_client = SearchClient(
-        endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
+        endpoint=os.getenv("AZUREAI_SEARCH_ENDPOINT"),
         credential=DefaultAzureCredential(),
         index_name=index_name,
     )
@@ -70,7 +70,7 @@ class ChatResponse(TypedDict):
 def get_chat_response(chat_input: str, chat_history: list = []) -> ChatResponse:
     model_config = AzureOpenAIModelConfiguration(
         azure_deployment=os.getenv("AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME"),
-        api_version=os.getenv("AZURE_OPENAI_COMPLETION_VERSION_NAME"),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     )
 

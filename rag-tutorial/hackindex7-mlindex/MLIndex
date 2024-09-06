@@ -1,0 +1,31 @@
+embeddings:
+  api_base: https://hackopenai7.openai.azure.com
+  api_type: azure_ad
+  api_version: 2023-07-01-preview
+  batch_size: '16'
+  connection:
+    id: /subscriptions/25c2bacb-f256-40d7-9dd4-5aab5052557c/resourceGroups/hackathon7/providers/Microsoft.MachineLearningServices/workspaces/hackhubproject7/connections/hackopenai7
+  connection_type: workspace_connection
+  deployment: text-embedding-ada-002
+  dimension: 1536
+  endpoint: https://hackopenai7.openai.azure.com/
+  kind: open_ai
+  model: text-embedding-ada-002
+  schema_version: '2'
+index:
+  api_version: 2024-05-01-preview
+  connection:
+    id: /subscriptions/25c2bacb-f256-40d7-9dd4-5aab5052557c/resourceGroups/hackathon7/providers/Microsoft.MachineLearningServices/workspaces/hackhubproject7/connections/hacksearch7
+  connection_type: workspace_connection
+  endpoint: https://hacksearch7.search.windows.net/
+  engine: azure-sdk
+  field_mapping:
+    content: content
+    embedding: contentVector
+    filename: filepath
+    metadata: meta_json_string
+    title: title
+    url: url
+  index: hackindex7
+  kind: acs
+  semantic_configuration_name: azureml-default

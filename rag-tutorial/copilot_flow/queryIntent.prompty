@@ -25,18 +25,18 @@
  \```
  chat_history: [    {
        "role": "user",
-       "content": "are the trailwalker shoes waterproof?"
+       "content": "What is a Data Science Virtual Machine?"
      },
      {
        "role": "assistant",
-       "content": "Yes, the TrailWalker Hiking Shoes are waterproof. They are designed with a durable and waterproof construction to withstand various terrains and weather conditions."
+       "content": "This Linux based virtual machine contains popular tools for data science modeling and development activities. The main tools include Microsoft R Open, Anaconda Python distribution, Jupyter notebooks for Python and R"
      }
  ]
  \```
  User query: "how much do they cost?"
  
- Intent: "The user wants to know how much the Trailwalker Hiking Shoes cost."
- Search query: "price of Trailwalker Hiking Shoes"
+ Intent: "The user wants to know more about Data Science Virtual Machines"
+ Search query: "What is a Data Science Virtual Machine"
  
  
  Example 2:
@@ -44,42 +44,26 @@
  \```
  chat_history: [    {
        "role": "user",
-       "content": "are the trailwalker shoes waterproof?"
+       "content": "How can I deploy a Data Science Virtual Machine?"
      },
      {
        "role": "assistant",
-       "content": "Yes, the TrailWalker Hiking Shoes are waterproof. They are designed with a durable and waterproof construction to withstand various terrains and weather conditions."
+       "content": "I can generate a Bicep template based on your inputs"
      },
      {
        "role": "user",
-       "content": "how much do they cost?"
+       "content": "What type of inputs do you need"
      },
      {
        "role": "assistant",
-       "content": "The TrailWalker Hiking Shoes are priced at $110."
-     },
-     {
-       "role": "user",
-       "content": "do you have waterproof tents?"
-     },
-     {
-       "role": "assistant",
-       "content": "Yes, we have waterproof tents available. Can you please provide more information about the type or size of tent you are looking for?"
-     },
-     {
-       "role": "user",
-       "content": "which is your most waterproof tent?"
-     },
-     {
-       "role": "assistant",
-       "content": "Our most waterproof tent is the Alpine Explorer Tent. It is designed with a waterproof material and has a rainfly with a waterproof rating of 3000mm. This tent provides reliable protection against rain and moisture."
+       "content": "Please enter the following parameters: adminUsername, vmName, location, vmSize, virtualNetworkName, subnetName, networkSecurityGroupName, authenticationType, adminPasswordOrKey"
      }
  ]
  \```
- User query: "how much does it cost?"
+ User query: "How can I deploy a Data Science Virtual Machine"
  
- Intent: "the user would like to know how much the Alpine Explorer Tent costs"
- Search query: "price of Alpine Explorer Tent"
+ Intent: "the user would like to know about deployment methods that this assistant can help with"
+ Search query: "Bicep Data Science Virtual Machine template"
  
  {% for item in chat_history %}
  {{item.role}}

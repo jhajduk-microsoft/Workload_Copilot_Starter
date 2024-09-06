@@ -19,13 +19,13 @@ client = MLClient(
     DefaultAzureCredential(),
     os.getenv("AZURE_SUBSCRIPTION_ID"),
     os.getenv("AZURE_RESOURCE_GROUP"),
-    os.getenv("AZUREAI_PROJECT_NAME"),
+    os.getenv("WORKSPACE_PROJECT_NAME"),
 )
 import os
 
 # append directory of the current script to data directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
-data_directory = os.path.join(script_dir, "data/product-info/")
+data_directory = os.path.join(script_dir, "data/")
 
 # Check if the directory exists
 if os.path.exists(data_directory):
@@ -41,7 +41,7 @@ else:
     print(f"Data directory '{data_directory}' does not exist.")
     exit()
 
-index_name = "tutorial-index"  # your desired index name
+index_name = os.getenv("AZUREAI_SEARCH_INDEX_NAME")  # your desired index name
 index_path = build_index(
     name=index_name,  # name of your index
     vector_store="azure_ai_search",  # the type of vector store - in this case it is Azure AI Search. Users can also use "azure_cognitive search"
@@ -62,7 +62,7 @@ index_path = build_index(
             subscription_id=client.subscription_id,
             resource_group_name=client.resource_group_name,
             workspace_name=client.workspace_name,
-            connection_name=os.getenv("AZURE_SEARCH_CONNECTION_NAME"),
+            connection_name=os.getenv("AZUREAI_SEARCH_CONNECTION_NAME"),
         ),
     ),
     tokens_per_chunk=800,  # Optional field - Maximum number of tokens per chunk
