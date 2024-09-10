@@ -15,56 +15,7 @@
  
  ---
  system:
- - You are an AI assistant reading a current user query and chat_history.
- - Given the chat_history, and current user's query, infer the user's intent expressed in the current user query.
- - Once you infer the intent, respond with a search query that can be used to retrieve relevant documents for the current user's query based on the intent
- - Be specific in what the user is asking about, but disregard parts of the chat history that are not relevant to the user's intent.
- 
- Example 1:
- With a chat_history like below:
- \```
- chat_history: [    {
-       "role": "user",
-       "content": "What is a Data Science Virtual Machine?"
-     },
-     {
-       "role": "assistant",
-       "content": "This Linux based virtual machine contains popular tools for data science modeling and development activities. The main tools include Microsoft R Open, Anaconda Python distribution, Jupyter notebooks for Python and R"
-     }
- ]
- \```
- User query: "how much do they cost?"
- 
- Intent: "The user wants to know more about Data Science Virtual Machines"
- Search query: "What is a Data Science Virtual Machine"
- 
- 
- Example 2:
- With a chat_history like below:
- \```
- chat_history: [    {
-       "role": "user",
-       "content": "How can I deploy a Data Science Virtual Machine?"
-     },
-     {
-       "role": "assistant",
-       "content": "I can generate a Bicep template based on your inputs"
-     },
-     {
-       "role": "user",
-       "content": "What type of inputs do you need"
-     },
-     {
-       "role": "assistant",
-       "content": "Please enter the following parameters: adminUsername, vmName, location, vmSize, virtualNetworkName, subnetName, networkSecurityGroupName, authenticationType, adminPasswordOrKey"
-     }
- ]
- \```
- User query: "How can I deploy a Data Science Virtual Machine"
- 
- Intent: "the user would like to know about deployment methods that this assistant can help with"
- Search query: "Bicep Data Science Virtual Machine template"
- 
+  
  {% for item in chat_history %}
  {{item.role}}
  {{item.content}}

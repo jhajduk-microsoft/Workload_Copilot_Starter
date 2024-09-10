@@ -1,5 +1,6 @@
-# Azure Resources Management Script
+# Workload Copilot Starter
 
+This project has most of the pieces need to deploy a Microsoft Copilot App. The focus of the app will be to help non-Azure professionals deploy their workloads into Azure without going into the portal.
 This Bash script automates the management of Azure resources related to the workload copilot AI project. It includes functionalities to set up necessary Azure resources, manage deployments, and clean up resources. It handles Azure OpenAI resources, Azure AI Hub, and Azure Search services.
 
 ## Prerequisites
@@ -9,7 +10,23 @@ This Bash script automates the management of Azure resources related to the work
 - This script will log you into your tenant and set your subscription as the target.
 - Bash environment to run the script.
 - Java installed locally
-- Python `tika` package
+- Python packages:
+
+`os`
+`tika`
+`requests`
+`promptflow-rag`
+`azure-ai-ml -U`
+`openai`
+`azure-identity`
+`azure-search-documents==11.4.0`
+`promptflow[azure]==1.11.0`
+`promptflow-tracing==1.11.0`
+`promptflow-tools==1.4.0`
+`promptflow-evals==0.3.0`
+`jinja2`
+`aiohttp`
+`python-dotenv`
 
 ## 1. Infrastructure Deployment
 
@@ -34,7 +51,6 @@ Before running the script, ensure the `.env` file located in the parent director
 - `AZUREAI_SEARCH_SKU`: SKU for the Azure AI Search resource
 - `AZUREAI_SEARCH_CONNECTION_NAME`: The connection name for Azure AI Search resource in Azure AI Studio.
 - `AZUREAI_SEARCH_INDEX_NAME`: The name of the index that will be create in Azure AI Search.
-
 
 ## Usage
 
@@ -63,46 +79,21 @@ Run the script with one of the following commands depending on your needs:
 
 - Go to your project in AI Studio.
 - Select **Components > Deployments**.
-- Select **+ Deploy model**.
-- In the **Collections** filter, select **Azure OpenAI**.
-- Select a model such as gpt-4 from the Azure OpenAI collection.
-- Select Confirm to open the deployment window.
-- Specify the deployment name and modify other default settings depending on your requirements.
-- Select Deploy.
+- Ensure that you see the embedding and completion models as deployments on this page. These will come from completing the previous step.
 
 ## 4. Permissions
 
 - Add yourself to the Azure OpenAI resource in the portal as `Cognitive Services OpenAI Contributor` and `Cognitive Services Contributor`
 - Add yourself to the Azure AI Search resource in the portal as `Search Index Data Contributor` and `Search Service Contributor`
+- Go to your Azure AI Search resource in the portal. Select `Keys`. Select `Both` to enable RBAC and Key authentication.
 
 ## 5. Generate the "customer data"
 
 This is where you can add data for the LLM to train on. It can be deployment instructions or whatever you like the user to be able to speak about. There are rate limits so you may want to keep it targeted for this lab.
 
-## 4. Create the Search Index
+## 6. Create the Search Index
 
-In this section, we will build the index for the data to be consumed. Use the `build_index.py` script and set the `index_name` variable. Once you have chosen a name, create and set another environment variable in the .env file: `AZUREAI_SEARCH_INDEX_NAME=index_name`
-
-### Requirements
-
-``` bash
-pip install os
-pip install requests
-pip install promptflow-rag
-pip install azure-ai-ml -U
-pip openai
-pip azure-identity
-pip azure-search-documents==11.4.0
-pip promptflow[azure]==1.11.0
-pip promptflow-tracing==1.11.0
-pip promptflow-tools==1.4.0
-pip promptflow-evals==0.3.0
-pip jinja2
-pip aiohttp
-pip python-dotenv
-```
-
-Once you have the prerequisites, you can run the following:
+In this section, we will build the index for the data to be consumed. Use the `build_index.py` Ensure that you have the following environment variable: `AZUREAI_SEARCH_INDEX_NAME=index_name`
 
 ``` bash
 python build_index.py
@@ -118,9 +109,11 @@ In the `queryIntent.prompty` file under the `copilot_flow` folder, change the ex
 
 ## 7. Test Your Copilot
 
+### Note: Ensure that you do not exceed the rate limits of the S0 tier Azure OpenAI instance. In order to prevent hitting the rate limits, I have removed the data form chat.prompty and queryIntent.prompty files. These files are responsible for chat history, which is not needed for this lab. Ensure that you pay attention to messages that you are exceeding the rate limit and pay attention to the backoff time.
+
 ### In the Terminal
 
-Run `pf flow test --flow ./copilot_flow --inputs chat_input="What is a Data Science VM?"`
+Run `pf flow test --flow ./copilot_flow --inputs chat_input="What is a data science virtual machine?"`
 
 ### With the UI
 

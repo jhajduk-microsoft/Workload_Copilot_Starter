@@ -69,7 +69,7 @@ class ChatResponse(TypedDict):
 
 def get_chat_response(chat_input: str, chat_history: list = []) -> ChatResponse:
     model_config = AzureOpenAIModelConfiguration(
-        azure_deployment=os.getenv("AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     )
@@ -107,4 +107,4 @@ def get_chat_response(chat_input: str, chat_history: list = []) -> ChatResponse:
         chat_history=chat_history, chat_input=chat_input, documents=documents
     )
 
-    return dict(reply=result, context=documents)
+    return dict(reply=result)

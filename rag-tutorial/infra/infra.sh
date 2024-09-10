@@ -12,7 +12,7 @@ resourceGroupName=$AZURE_RESOURCE_GROUP
 aiHubName=$WORKSPACE_NAME
 aoaiName=$AZURE_OPENAI_NAME
 location=$LOCATION
-projectName=$AZUREAI_PROJECT_NAME
+projectName=$WORKSPACE_PROJECT_NAME
 openaiSkuName=$AZURE_OPENAI_SKU_NAME
 embeddingName=$AZURE_OPENAI_EMBEDDING_DEPLOYMENT
 embeddingModelVersion=$AZURE_OPENAI_EMBEDDING_MODEL_VERSION
@@ -22,7 +22,8 @@ searchName=$AZUREAI_SEARCH_NAME
 searchServiceSku=$AZUREAI_SEARCH_SKU
 storageAccountName=$STORAGE_ACCOUNT_NAME
 storageAccountSku=$STORAGE_ACCOUNT_SKU
-connectionEndpointFile='connection.yml'
+storageContainerName=$STORAGE_CONTAINER_NAME
+dataDirectory='../data/'
 
 # Sign in to Azure CLI
 az config set core.login_experience_v2=off
@@ -156,15 +157,58 @@ if [ "$1" == "setup" ]; then
         fi
     fi
 
-    # Connect Azure OpenAI to Azure ML workspace
-    echo "Connecting Azure OpenAI to Azure ML workspace..."
-    if ! az ml connection create \
-        --file $connectionEndpointFile \
-        --resource-group $resourceGroupName \
-        --workspace-name $aiHubName \
-        --populate-secrets; then
-        echo "Failed to connect Azure OpenAI to Azure ML workspace"
-        exit 1
+    # Check if storage account exists
+    if az storage account show --name $storageAccountName --resource-group $resourceGroupName &>/dev/null; then
+        echo "Storage account $storageAccountName already exists"
+    else
+        # Create storage account
+        echo "Creating Storage Account"
+        if ! az storage account create \
+            --name $storageAccountName \
+            --resource-group $resourceGroupName \
+            --location $location \
+            --sku $storageAccountSku \
+            --kind StorageV2 \
+            --https-only true \
+            --allow-blob-public-access false; then
+            echo "Failed to create storage account"
+            exit 1
+        fi
+    fi
+
+    # Check if container exists
+    if az storage container exists \
+        --name $storageContainerName --resource-group &>/dev/null; then \
+        echo "Container $storageContainerName already exists"
+    else
+        # Create container
+        echo "Creating Container"
+        if ! az storage container create \
+            --name $storageContainerName \
+            --account-name $storageAccountName \
+            --account-key $(az storage account keys list --account-name $storageAccountName --resource-group $resourceGroupName --query "[0].value" -o tsv); then
+            echo "Failed to create container"
+            exit 1
+        fi
+    fi
+
+    # Upload data to storage account if files do not exist
+    echo "Uploading Data to Storage Account"
+    if ! az storage blob list \
+        --container-name $storageContainerName \
+        --account-name $storageAccountName \
+        --account-key $(az storage account keys list --account-name $storageAccountName --resource-group $resourceGroupName --query "[0].value" -o tsv) \
+        --query "[?contains(name, '.txt')].name" -o tsv | grep -q -v "data/"; then
+        if ! az storage blob upload-batch \
+            --destination $storageContainerName \
+            --account-name $storageAccountName \
+            --account-key $(az storage account keys list --account-name $storageAccountName --resource-group $resourceGroupName --query "[0].value" -o tsv) \
+            --source $dataDirectory; then
+            echo "Failed to upload data to storage account"
+            exit 1
+        fi
+    else
+        echo "Files already exist in storage account"
     fi
 
     # Retrieve the REST API endpoint URL if it does not already exist
@@ -208,6 +252,16 @@ if [ "$1" == "setup" ]; then
     echo "AZUREAI_SEARCH_ADMIN_KEY=$searchAdminKey" >> ../.env
     fi
     
+        # Retrieve the admin key for Azure AI Search if it does not already exist
+    if ! grep -q "STORAGE_ACCOUNT_KEY=" ../.env; then
+    strAccountKey=$(az storage account keys list --account-name $storageAccountName --resource-group $resourceGroupName --query "[0].value" -o tsv)
+        if [ $? -ne 0 ]; then
+            echo "Failed to retrieve Azure Storage Account Key"
+            exit 1
+        fi
+    echo "STORAGE_ACCOUNT_KEY=$strAccountKey" >> ../.env
+    fi
+
     echo "Resources created successfully"
 
 fi

@@ -41,10 +41,11 @@ else:
     print(f"Data directory '{data_directory}' does not exist.")
     exit()
 
-index_name = os.getenv("AZUREAI_SEARCH_INDEX_NAME")  # your desired index name
+# Adding the split skill in the index creation
+index_name = os.getenv("AZUREAI_SEARCH_INDEX_NAME")
 index_path = build_index(
-    name=index_name,  # name of your index
-    vector_store="azure_ai_search",  # the type of vector store - in this case it is Azure AI Search. Users can also use "azure_cognitive search"
+    name=index_name,
+    vector_store="azure_ai_search",
     embeddings_model_config=EmbeddingsModelConfig(
         model_name=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT"),
         deployment_name=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT"),
@@ -55,9 +56,9 @@ index_path = build_index(
             connection_name=os.getenv("AZURE_OPENAI_CONNECTION_NAME"),
         ),
     ),
-    input_source=LocalSource(input_data=data_directory),  # the location of your files
+    input_source=LocalSource(input_data=data_directory),
     index_config=AzureAISearchConfig(
-        ai_search_index_name=index_name,  # the name of the index store inside the azure ai search service
+        ai_search_index_name=index_name,
         ai_search_connection_config=ConnectionConfig(
             subscription_id=client.subscription_id,
             resource_group_name=client.resource_group_name,
@@ -65,9 +66,8 @@ index_path = build_index(
             connection_name=os.getenv("AZUREAI_SEARCH_CONNECTION_NAME"),
         ),
     ),
-    tokens_per_chunk=800,  # Optional field - Maximum number of tokens per chunk
-    token_overlap_across_chunks=0,  # Optional field - Number of tokens to overlap between chunks
+    tokens_per_chunk=800,  # Maximum number of tokens per chunk
+    token_overlap_across_chunks=0,  # Overlap between chunks
 )
-
 # register the index so that it shows up in the cloud project
 client.indexes.create_or_update(Index(name=index_name, path=index_path))
