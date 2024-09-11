@@ -1,15 +1,18 @@
 import os
 from dotenv import load_dotenv
-
-load_dotenv()
-
 from promptflow.core import Prompty, AzureOpenAIModelConfiguration
 from promptflow.tracing import trace
 from openai import AzureOpenAI
+from promptflow.core import Prompty, AzureOpenAIModelConfiguration
+from pathlib import Path
+from typing import TypedDict
+
+load_dotenv()
+
 
 # <get_documents>
 @trace
-def get_documents(search_query: str, num_docs=3):
+def get_documents(search_query: str, num_docs=1):
     from azure.identity import DefaultAzureCredential, get_bearer_token_provider
     from azure.search.documents import SearchClient
     from azure.search.documents.models import VectorizedQuery
@@ -54,17 +57,9 @@ def get_documents(search_query: str, num_docs=3):
     return context
 
 
-# <get_documents>
-
-from promptflow.core import Prompty, AzureOpenAIModelConfiguration
-
-from pathlib import Path
-from typing import TypedDict
-
-
 class ChatResponse(TypedDict):
-    context: dict
     reply: str
+
 
 
 def get_chat_response(chat_input: str, chat_history: list = []) -> ChatResponse:
@@ -92,7 +87,7 @@ def get_chat_response(chat_input: str, chat_history: list = []) -> ChatResponse:
         searchQuery = intentPrompty(query=chat_input, chat_history=chat_history)
 
     # retrieve relevant documents and context given chat_history and current user query (chat_input)
-    documents = get_documents(searchQuery, 3)
+    documents = get_documents(searchQuery, 1)
 
     # send query + document context to chat completion for a response
     path_to_prompty = f"{Path(__file__).parent.absolute().as_posix()}/chat.prompty"

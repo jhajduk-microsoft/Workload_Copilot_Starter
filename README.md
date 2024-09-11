@@ -1,7 +1,7 @@
 # Workload Copilot Starter
 
 This project has most of the pieces need to deploy a Microsoft Copilot App. The focus of the app will be to help non-Azure professionals deploy their workloads into Azure without going into the portal.
-This Bash script automates the management of Azure resources related to the workload copilot AI project. It includes functionalities to set up necessary Azure resources, manage deployments, and clean up resources. It handles Azure OpenAI resources, Azure AI Hub, and Azure Search services.
+The Bash script automates the management of Azure resources related to the workload copilot AI project. It includes functionalities to set up necessary Azure resources, manage deployments, and clean up resources. It handles Azure OpenAI resources, Azure AI Hub, and Azure Search services.
 
 ## Prerequisites
 
@@ -28,6 +28,8 @@ This Bash script automates the management of Azure resources related to the work
 `aiohttp`
 `python-dotenv`
 
+## Part One
+
 ## 1. Infrastructure Deployment
 
 Before running the script, ensure the `.env` file located in the parent directory is properly set up with the necessary Azure environment variables:
@@ -41,12 +43,12 @@ Before running the script, ensure the `.env` file located in the parent director
 - `WORKSPACE_PROJECT_NAME`: Name of your project.
 - `AZURE_OPENAI_NAME`: Name of the Azure OpenAI resource.
 - `AZURE_OPENAI_SKU_NAME`: SKU for the Azure OpenAI service.
-- `AZURE_OPENAI_API_VERSION`: API version of Azure OpenAI. Set to `2024-05-01-preview`
+- `AZURE_OPENAI_API_VERSION`: API version of Azure OpenAI. Set to `2024-08-06`
 - `AZURE_OPENAI_CONNECTION_NAME`: The connection name for AOAI in Azure AI Studio.
 - `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: Deployment name for the embedding model. Set to `text-embedding-ada-002`
 - `AZURE_OPENAI_EMBEDDING_MODEL_VERSION`: Version of the embedding model. Set to `2`
-- `AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME`: Deployment name for the completion model. Set to `gpt-35-turbo`
-- `AZURE_OPENAI_COMPLETION_VERSION_NAME`: Version of the completion model. Set to `1106`
+- `AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME`: Deployment name for the completion model.
+- `AZURE_OPENAI_COMPLETION_VERSION_NAME`: Version of the completion model.
 - `AZUREAI_SEARCH_NAME`: Name of the Azure AI Search resource
 - `AZUREAI_SEARCH_SKU`: SKU for the Azure AI Search resource
 - `AZUREAI_SEARCH_CONNECTION_NAME`: The connection name for Azure AI Search resource in Azure AI Studio.
@@ -57,8 +59,8 @@ Before running the script, ensure the `.env` file located in the parent director
 Run the script with one of the following commands depending on your needs:
 
 ```bash
-./infra.sh setup
-./infra.sh destroy
+bash ./infra.sh setup
+bash ./infra.sh destroy
 ```
 
 ## 2. Create the connection to Azure AI Search and Azure OpenAI in Azure AI Studio
@@ -83,9 +85,9 @@ Run the script with one of the following commands depending on your needs:
 
 ## 4. Permissions
 
-- Add yourself to the Azure OpenAI resource in the portal as `Cognitive Services OpenAI Contributor` and `Cognitive Services Contributor`
-- Add yourself to the Azure AI Search resource in the portal as `Search Index Data Contributor` and `Search Service Contributor`
-- Go to your Azure AI Search resource in the portal. Select `Keys`. Select `Both` to enable RBAC and Key authentication.
+- Add yourself to the Azure OpenAI resource in the portal as **Cognitive Services OpenAI Contributor** and **Cognitive Services Contributor**
+- Add yourself to the Azure AI Search resource in the portal as **Search Index Data Contributor** and **Search Service Contributor**
+- Go to your Azure AI Search resource in the portal. Select **Keys**. Select **Both** to enable RBAC and Key authentication.
 
 ## 5. Generate the "customer data"
 
@@ -98,6 +100,8 @@ In this section, we will build the index for the data to be consumed. Use the `b
 ``` bash
 python build_index.py
 ```
+
+## **If you are on the S0 Azure OpenAI tier, skip step 5 and 6**
 
 ## 5. System Prompt
 
