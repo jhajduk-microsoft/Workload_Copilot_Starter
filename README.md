@@ -101,17 +101,17 @@ In this section, we will build the index for the data to be consumed. Use the `b
 python build_index.py
 ```
 
-## **If you are on the S0 Azure OpenAI tier, skip step 5 and 6**
+## **If you are on the S0 Azure OpenAI tier, skip step 7 and 8**
 
-## 5. System Prompt
+## 7. System Prompt
 
 In the `chat.prompty` file under the `copilot_flow` folder, change the system prompt to a message that is relevant to your use case.
 
-## 6. Query Intent
+## 8. Query Intent
 
 In the `queryIntent.prompty` file under the `copilot_flow` folder, change the example desired interactions system prompt to what is relevant to your use case.
 
-## 7. Test Your Copilot
+## 9. Test Your Copilot
 
 ### Note: Ensure that you do not exceed the rate limits of the S0 tier Azure OpenAI instance. In order to prevent hitting the rate limits, I have removed the data form chat.prompty and queryIntent.prompty files. These files are responsible for chat history, which is not needed for this lab. Ensure that you pay attention to messages that you are exceeding the rate limit and pay attention to the backoff time.
 

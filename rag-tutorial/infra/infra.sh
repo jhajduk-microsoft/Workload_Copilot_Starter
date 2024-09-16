@@ -8,19 +8,18 @@ set +a
 # Variables (replace <subscriptionID> with your actual Azure subscription ID)
 tenant=$TENANT_ID
 subscriptionID=$AZURE_SUBSCRIPTION_ID
-resourceGroupName=$AZURE_RESOURCE_GROUP + "$(datetime +%s)"
-aiHubName=$WORKSPACE_NAME + "$(datetime +%s)"
-aoaiName=$AZURE_OPENAI_NAME + "$(datetime +%s)"
+resourceGroupName=$AZURE_RESOURCE_GROUP
+aiHubName=$WORKSPACE_NAME
+aoaiName=$AZURE_OPENAI_NAME
 location=$LOCATION
-projectName=$WORKSPACE_PROJECT_NAME + "$(datetime +%s)"
+projectName=$WORKSPACE_PROJECT_NAME
 openaiSkuName=$AZURE_OPENAI_SKU_NAME
 embeddingName=$AZURE_OPENAI_EMBEDDING_DEPLOYMENT
 embeddingModelVersion=$AZURE_OPENAI_EMBEDDING_MODEL_VERSION
 completionName=$AZURE_OPENAI_COMPLETION_NAME
 completionModelVersion=$AZURE_OPENAI_COMPLETION_VERSION_NAME
-searchName=$AZUREAI_SEARCH_NAME + "$(datetime +%s)"
+searchName=$AZUREAI_SEARCH_NAME
 searchServiceSku=$AZUREAI_SEARCH_SKU
-dataDirectory='../data/'
 
 # Sign in to Azure CLI
 az config set core.login_experience_v2=off
