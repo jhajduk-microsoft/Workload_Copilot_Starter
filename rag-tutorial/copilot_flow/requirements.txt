@@ -1,10 +1,14 @@
-openai
+openai<=1.44.1
 azure-identity
 azure-search-documents==11.4.0
 promptflow[azure]==1.11.0
 promptflow-tracing==1.11.0
 promptflow-tools==1.4.0
 promptflow-evals==0.3.0
+promptflow-rag
 jinja2
 aiohttp
 python-dotenv
+tika
+requests
+azure-ai-ml

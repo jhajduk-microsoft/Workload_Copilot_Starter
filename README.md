@@ -1,58 +1,42 @@
 # Workload Copilot Starter
 
-This project has most of the pieces need to deploy a Microsoft Copilot App. The focus of the app will be to help non-Azure professionals deploy their workloads into Azure without going into the portal.
-The Bash script automates the management of Azure resources related to the workload copilot AI project. It includes functionalities to set up necessary Azure resources, manage deployments, and clean up resources. It handles Azure OpenAI resources, Azure AI Hub, and Azure Search services.
+This project contains the necessary infrastructure deployment, index deployment, and promptflow files needed to deploy a Microsoft Copilot solution. In this repo, you will find an Azure CLI script that will deploy the necessary infrastructure in the Azure Portal. It is located in `rag-tutorial\infra\infra.sh` It is a shell script so you will need a shell terminal to run this script. The following setup and infrastructure deployment can be deployed using a VSCode terminal window.
+
+## Set up a shell terminal in VSCode
+
+If using windows, use [Git Bash](https://git-scm.com/downloads). Then, open VSCode, type CTRL+Shift+P, type in `Select Default Profile` and choose Git Bash. Open a terminal window in VSCode and ensure that Git Bash is selected. In VSCode On Mac, use the `zsh` shell in a terminal window.
 
 ## Prerequisites
 
-- Azure CLI must be installed on your machine.
-- Install the ml CLI extension: az extension add -n ml
-- This script will log you into your tenant and set your subscription as the target.
-- Bash environment to run the script.
-- Java installed locally
-- Python packages:
-
-`os`
-`tika`
-`requests`
-`promptflow-rag`
-`azure-ai-ml -U`
-`openai`
-`azure-identity`
-`azure-search-documents==11.4.0`
-`promptflow[azure]==1.11.0`
-`promptflow-tracing==1.11.0`
-`promptflow-tools==1.4.0`
-`promptflow-evals==0.3.0`
-`jinja2`
-`aiohttp`
-`python-dotenv`
-
-## Part One
+- A cloned (forked, then cloned, if you desire) copy of this repository on your local machine
+- An Azure subscription where the resources will be deployed. You can set up an Azure Free Account [here](https://azure.microsoft.com/pricing/purchase-options/azure-account?msockid=2ebef0a87030677c109ee28e7198663b) - Use the `Azure free account` option. You will need to use a credit card for a temporary $1 charge that will be reversed. After you are done with the account, you may cancel using the instructions [here](https://learn.microsoft.com/azure/cost-management-billing/manage/cancel-azure-subscription) **Be mindful of your spend in free accounts!** The `infra.sh` script can help set up and tear down infrastructure quickly and avoid unintended expenses.
+- [Visual Studio Code](https://code.visualstudio.com/Download)
+- Azure CLI must be installed on your machine. Ensure you have the latest version.
+- Install the `ml` extension to the Azure CLI: `az extension add -n ml`
+- Python packages. There is a requirements.txt file in the location rag-tutorial/copilot_flow/requirements.txt Navigate to the rag-tutorial folder and run `pip install -r .\copilot_flow\requirements.txt` (You may have to use forward slashes depending on your OS type)
 
 ## 1. Infrastructure Deployment
 
-Before running the script, ensure the `.env` file located in the parent directory is properly set up with the necessary Azure environment variables:
+Create the `.env` file in the rag-tutorial directory and populate these variables:
 
 - `TENANT_ID`: Your Azure Tenant ID.
 - `AZURE_SUBSCRIPTION_ID`: Your Azure Subscription ID.
-- `AZURE_RESOURCE_GROUP`: Name of the Azure Resource Group to manage.
-- `LOCATION`: Azure region for deploying resources.
-- `WORKSPACE_NAME`: Name for the Azure AI Studio Hub resource.
-- `WORKSPACE_SKU_NAME`: Name of the Azure AI Hub resource.
-- `WORKSPACE_PROJECT_NAME`: Name of your project.
-- `AZURE_OPENAI_NAME`: Name of the Azure OpenAI resource.
-- `AZURE_OPENAI_SKU_NAME`: SKU for the Azure OpenAI service.
-- `AZURE_OPENAI_API_VERSION`: API version of Azure OpenAI. Set to `2024-08-06`
+- `AZURE_RESOURCE_GROUP`: Desired name of the Azure Resource Group to manage.
+- `LOCATION`: Desired Azure region for deploying resources.
+- `WORKSPACE_NAME`: Desired name for the Azure AI Studio Hub resource.
+- `WORKSPACE_PROJECT_NAME`: Desired name of your project.
+- `AZURE_OPENAI_NAME`: Desired name of the Azure OpenAI resource.
+- `AZURE_OPENAI_SKU_NAME`: Desired SKU for the Azure OpenAI service.
+- `AZURE_OPENAI_API_VERSION`: API version of Azure OpenAI. [Check the Azure OpenAI API versions](https://learn.microsoft.com/azure/ai-services/openai/reference)
 - `AZURE_OPENAI_CONNECTION_NAME`: The connection name for AOAI in Azure AI Studio.
-- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: Deployment name for the embedding model. Set to `text-embedding-ada-002`
-- `AZURE_OPENAI_EMBEDDING_MODEL_VERSION`: Version of the embedding model. Set to `2`
-- `AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME`: Deployment name for the completion model.
+- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: Deployment name for the embedding model.
+- `AZURE_OPENAI_EMBEDDING_MODEL_VERSION`: Version of the embedding model.
+- `AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME`: Deployment name for the completion model. e.g. gpt-35-turbo
 - `AZURE_OPENAI_COMPLETION_VERSION_NAME`: Version of the completion model.
-- `AZUREAI_SEARCH_NAME`: Name of the Azure AI Search resource
-- `AZUREAI_SEARCH_SKU`: SKU for the Azure AI Search resource
-- `AZUREAI_SEARCH_CONNECTION_NAME`: The connection name for Azure AI Search resource in Azure AI Studio.
-- `AZUREAI_SEARCH_INDEX_NAME`: The name of the index that will be create in Azure AI Search.
+- `AZUREAI_SEARCH_NAME`: Desired name of the Azure AI Search resource
+- `AZUREAI_SEARCH_SKU`: Desired SKU for the Azure AI Search resource
+- `AZUREAI_SEARCH_CONNECTION_NAME`: Desired connection name for Azure AI Search resource in Azure AI Studio.
+- `AZUREAI_SEARCH_INDEX_NAME`: Desired name of the index that will be create in Azure AI Search.
 
 ## Usage
 
@@ -62,6 +46,8 @@ Run the script with one of the following commands depending on your needs:
 bash ./infra.sh setup
 bash ./infra.sh destroy
 ```
+
+After you run this script, the endpoints and keys for Azure OpenAI and Azure AI Search will be added to the `.env` file. View them.
 
 ## 2. Create the connection to Azure AI Search and Azure OpenAI in Azure AI Studio
 
@@ -81,7 +67,7 @@ bash ./infra.sh destroy
 
 - Go to your project in AI Studio.
 - Select **Components > Deployments**.
-- Ensure that you see the embedding and completion models as deployments on this page. These will come from completing the previous step.
+- Ensure that you see the embedding and GPT models as deployments on this page. These will come from completing the previous step.
 
 ## 4. Permissions
 
@@ -91,11 +77,11 @@ bash ./infra.sh destroy
 
 ## 5. Generate the "customer data"
 
-This is where you can add data for the LLM to train on. It can be deployment instructions or whatever you like the user to be able to speak about. There are rate limits so you may want to keep it targeted for this lab.
+This is where you can add data for the LLM to train on. It can be deployment instructions or whatever you like the user to be able to ask about.
 
 ## 6. Create the Search Index
 
-In this section, we will build the index for the data to be consumed. Use the `build_index.py` Ensure that you have the following environment variable: `AZUREAI_SEARCH_INDEX_NAME=index_name`
+In this section, we will build the search index for the data to be consumed. Use the `build_index.py` Ensure that you have the following environment variable: `AZUREAI_SEARCH_INDEX_NAME=index_name`
 
 ``` bash
 python build_index.py
@@ -122,3 +108,11 @@ Run `pf flow test --flow ./copilot_flow --inputs chat_input="What is a data scie
 ### With the UI
 
 Run `pf flow test --flow ./copilot_flow --ui`
+
+## Known Issues
+
+- In Azure AI Studio, you may encounter a permissions error when viewing deployed models to the workspace. Log out of Azure AI Studio and the portal and log in again to clear this error.
+
+- Rate limit exceeded when running promptflow queries. This can happen if the number of requests have exceeded the threshold that the Azure OPenAI service accepts. Either wait for a few minutes and try again or redeploy the infrastructure. You may have to choose a new region. This is only noted in a small number of cases.
+
+- If you get the error that the `Principal does not have access to API/Version` when running the promptflow query, assign yourself the `Cognitive Services OpenAI Contributor` role on the Azure OpenAI resource. If your Azure OpenAI resource is obscured in the Azure AI Studio as an AI Services resource, grant yourself this role on the resource group.
