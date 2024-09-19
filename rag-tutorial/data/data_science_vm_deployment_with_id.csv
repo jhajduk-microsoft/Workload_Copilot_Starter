@@ -1,9 +1,0 @@
-id,wrkld,info,deploy,steps
-1,Data Science Virtual Machine,"This Linux based virtual machine contains popular tools for data science modeling and development activities. The main tools include Microsoft R Open, Anaconda Python distribution, Jupyter notebooks for Python and R, Postgres database, Azure command line tools, libraries to access various Azure services like AzureML, databases, Azure storage and big data services. It also has machine learning tools and algorithms like CNTK (a deep learning toolkit from Microsoft Research), Vowpal Wabbit and xgboost.","az group create --name exampleRG --location eastus
-az deployment group create --resource-group exampleRG --template-file DSVM.bicep --parameters adminUsername=<admin-user> vmName=<vm-name>","To create an instance of either the Ubuntu 20.04 DSVM or the Azure DSVM for PyTorch:
-
-- Go to the Azure portal. You might get a prompt to sign in to your Azure account if you haven't signed in yet.
-
-- Find the VM listing by entering data science virtual machine. Then select Data Science Virtual Machine- Ubuntu 20.04 or Azure DSVM for PyTorch.
-
-- Select Create.

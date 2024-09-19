@@ -6,6 +6,34 @@ source ../.env
 set +a
 
 # Variables (replace <subscriptionID> with your actual Azure subscription ID)
+# Define the list of variables
+variables=(
+    tenant=$TENANT_ID
+    subscriptionID=$AZURE_SUBSCRIPTION_ID
+    resourceGroupName=$AZURE_RESOURCE_GROUP
+    aiHubName=$WORKSPACE_NAME
+    aoaiName=$AZURE_OPENAI_NAME
+    location=$LOCATION
+    projectName=$WORKSPACE_PROJECT_NAME
+    openaiSkuName=$AZURE_OPENAI_SKU_NAME
+    embeddingName=$AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+    embeddingModelVersion=$AZURE_OPENAI_EMBEDDING_MODEL_VERSION
+    completionName=$AZURE_OPENAI_COMPLETION_NAME
+    completionModelVersion=$AZURE_OPENAI_COMPLETION_VERSION_NAME
+    searchName=$AZUREAI_SEARCH_NAME
+    searchServiceSku=$AZUREAI_SEARCH_SKU
+)
+
+# Iterate through the list of variables
+for variable in "${variables[@]}"; do
+    # Check if the variable is empty
+    if [[ -z $variable ]]; then
+        echo "One or more variables are empty: $variable"
+        exit 1
+    fi
+done
+
+# Assign the variables
 tenant=$TENANT_ID
 subscriptionID=$AZURE_SUBSCRIPTION_ID
 resourceGroupName=$AZURE_RESOURCE_GROUP
@@ -163,46 +191,53 @@ if [ "$1" == "setup" ]; then
         fi
     fi
 
-    # Retrieve the REST API endpoint URL if it does not already exist
-    if ! grep -q "AZURE_OPENAI_ENDPOINT=" ../.env; then
+    # Retrieve the REST API endpoint URL
     AOAIendpoint=$(az cognitiveservices account show --name $aoaiName --resource-group $resourceGroupName --query "properties.endpoint" -o tsv)
-        if [ $? -ne 0 ]; then
-            echo "Failed to retrieve AOAI endpoint URL"
-            exit 1
+    if [ $? -ne 0 ]; then
+        echo "Failed to retrieve AOAI endpoint URL"
+        exit 1
     fi
     echo >> ../.env
     echo "AZURE_OPENAI_ENDPOINT=$AOAIendpoint" >> ../.env
-    fi
 
-    # Retrieve the primary API key if it does not already exist
-    if ! grep -q "AZURE_OPENAI_API_KEY=" ../.env; then
+    # Retrieve the primary API key
     AOAIApiKey=$(az cognitiveservices account keys list --name $aoaiName --resource-group $resourceGroupName --query "key1" -o tsv)
-        if [ $? -ne 0 ]; then
-            echo "Failed to retrieve AOAI API key"
-            exit 1
+    if [ $? -ne 0 ]; then
+        echo "Failed to retrieve AOAI API key"
+        exit 1
     fi
-
     echo "AZURE_OPENAI_API_KEY=$AOAIApiKey" >> ../.env
-    fi
 
-    if ! grep -q "AZUREAI_SEARCH_ENDPOINT=" ../.env; then
+    # Retrieve the Azure AI Search endpoint
     searchEndpoint=$(az search service show --name $searchName --resource-group $resourceGroupName --query "properties.url" -o tsv)
-        if [ $? -ne 0 ]; then
-            echo "Failed to retrieve Azure AI Search endpoint"
-            exit 1
-        fi
+    if [ $? -ne 0 ]; then
+        echo "Failed to retrieve Azure AI Search endpoint"
+        exit 1
+    fi
     echo "AZUREAI_SEARCH_ENDPOINT=https://$searchName.search.windows.net" >> ../.env
+
+    # Retrieve the admin key for Azure AI Search
+    searchAdminKey=$(az search admin-key show --service-name $searchName --resource-group $resourceGroupName --query "primaryKey" -o tsv)
+    if [ $? -ne 0 ]; then
+        echo "Failed to retrieve Azure AI Search Admin Key"
+        exit 1
+    fi
+    echo "AZUREAI_SEARCH_ADMIN_KEY=$searchAdminKey" >> ../.env
+
+    # Call Python script for Azure AI Studio Connections
+    if ! python3 ./connections_yaml/azure_ai_studio_connection_handler.py; then
+        echo "Failed to execute replacements in connection yaml files"
+        exit 1
     fi
 
-    # Retrieve the admin key for Azure AI Search if it does not already exist
-    if ! grep -q "AZUREAI_SEARCH_ADMIN_KEY=" ../.env; then
-    searchAdminKey=$(az search admin-key show --service-name $searchName --resource-group $resourceGroupName --query "primaryKey" -o tsv)
-        if [ $? -ne 0 ]; then
-            echo "Failed to retrieve Azure AI Search Admin Key"
-            exit 1
-        fi
-    echo "AZUREAI_SEARCH_ADMIN_KEY=$searchAdminKey" >> ../.env
+    # Wait for 10 seconds
+    sleep 10
+
+    if ! bash ./connections_yaml/create_azure_ai_connections.sh; then
+        echo "Failed to create connections in Azure AI Studio script"
+        exit 1
     fi
+
     
     echo "Resources created successfully"
 

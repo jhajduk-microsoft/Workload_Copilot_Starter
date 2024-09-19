@@ -87,7 +87,9 @@ profile_default/
 ipython_config.py
 
 # YAML
-.yaml
+*.yaml
+azure_ai_search.yaml
+azure_openai_service.yaml
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
