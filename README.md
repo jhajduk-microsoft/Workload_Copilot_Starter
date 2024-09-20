@@ -65,8 +65,15 @@ After you run this script, the endpoints and keys for Azure OpenAI and Azure AI 
 
 ## 3. Add the Azure OpenAI models into Azure AI Studio
 
-- Go to your project in AI Studio.
-- Select **Components > Deployments**.
+- Go to the Azure portal
+- Go to the resource group that you created
+- Click on the resource with Type Azure AI Hub
+- Click on **Launch Azure AI Studio**
+- Select **Deployments** in the left hand menu
+- Select **Deploy model** > **Deploy base model**
+- From the left hand list, select either there embedding model or the GPT model that you deployed with the infra script
+- The next window that pops up should display the deployment details for the AOAI instance and mode that you deployed
+- Select **Connect and deploy**
 - Ensure that you see the embedding and GPT models as deployments on this page. These will come from completing the previous step.
 
 ## 4. Permissions
