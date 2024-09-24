@@ -6,9 +6,28 @@ from openai import AzureOpenAI
 from promptflow.core import Prompty, AzureOpenAIModelConfiguration
 from pathlib import Path
 from typing import TypedDict
+import subprocess
+import shlex
 
 load_dotenv()
 
+def execute_azure_cli_command(cli_command: str) -> str:
+    """
+    Executes an Azure CLI command and returns the output.
+    This function should be used with caution as it can execute powerful commands.
+    Ensure appropriate security measures like command validation and user authentication.
+    """
+    try:
+        # Security consideration: Use shlex to safely split the command string
+        args = shlex.split(cli_command)
+        # Security consideration: Only allow specific whitelisted commands
+        if args[0] != "az":
+            return "Unauthorized command. Only 'az' commands are allowed."
+
+        result = subprocess.run(args, capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"An error occurred: {e.stderr}"
 
 # <get_documents>
 @trace
@@ -61,45 +80,47 @@ class ChatResponse(TypedDict):
     reply: str
 
 
-
 def get_chat_response(chat_input: str, chat_history: list = []) -> ChatResponse:
     model_config = AzureOpenAIModelConfiguration(
         azure_deployment=os.getenv("AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     )
+    if "az" in chat_input.lower():
+        # Check if the input is a deployment command
+        return execute_azure_cli_command(chat_input)
+    else:
+        searchQuery = chat_input
 
-    searchQuery = chat_input
+        # Only extract intent if there is chat_history
+        if len(chat_history) > 0:
+            # extract current query intent given chat_history
+            path_to_prompty = f"{Path(__file__).parent.absolute().as_posix()}/queryIntent.prompty"  # pass absolute file path to prompty
+            intentPrompty = Prompty.load(
+                path_to_prompty,
+                model={
+                    "configuration": model_config,
+                    "parameters": {
+                        "max_tokens": 256,
+                    },
+                },
+            )
+            searchQuery = intentPrompty(query=chat_input, chat_history=chat_history)
 
-    # Only extract intent if there is chat_history
-    if len(chat_history) > 0:
-        # extract current query intent given chat_history
-        path_to_prompty = f"{Path(__file__).parent.absolute().as_posix()}/queryIntent.prompty"  # pass absolute file path to prompty
-        intentPrompty = Prompty.load(
+        # retrieve relevant documents and context given chat_history and current user query (chat_input)
+        documents = get_documents(searchQuery, 1)
+
+        # send query + document context to chat completion for a response
+        path_to_prompty = f"{Path(__file__).parent.absolute().as_posix()}/chat.prompty"
+        chatPrompty = Prompty.load(
             path_to_prompty,
             model={
                 "configuration": model_config,
-                "parameters": {
-                    "max_tokens": 256,
-                },
+                "parameters": {"max_tokens": 256, "temperature": 0.2},
             },
         )
-        searchQuery = intentPrompty(query=chat_input, chat_history=chat_history)
+        result = chatPrompty(
+            chat_history=chat_history, chat_input=chat_input, documents=documents
+        )
 
-    # retrieve relevant documents and context given chat_history and current user query (chat_input)
-    documents = get_documents(searchQuery, 1)
-
-    # send query + document context to chat completion for a response
-    path_to_prompty = f"{Path(__file__).parent.absolute().as_posix()}/chat.prompty"
-    chatPrompty = Prompty.load(
-        path_to_prompty,
-        model={
-            "configuration": model_config,
-            "parameters": {"max_tokens": 256, "temperature": 0.2},
-        },
-    )
-    result = chatPrompty(
-        chat_history=chat_history, chat_input=chat_input, documents=documents
-    )
-
-    return dict(reply=result)
+        return dict(reply=result)

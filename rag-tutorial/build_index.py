@@ -23,6 +23,7 @@ client = MLClient(
 )
 import os
 
+
 # append directory of the current script to data directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 data_directory = os.path.join(script_dir, "data/")

@@ -38,6 +38,7 @@ tenant=$TENANT_ID
 subscriptionID=$AZURE_SUBSCRIPTION_ID
 resourceGroupName=$AZURE_RESOURCE_GROUP
 aiHubName=$WORKSPACE_NAME
+aiServices=$AZUREAI_SERVICES_NAME
 aoaiName=$AZURE_OPENAI_NAME
 location=$LOCATION
 projectName=$WORKSPACE_PROJECT_NAME
@@ -75,67 +76,48 @@ if [ "$1" == "setup" ]; then
     if az ml workspace show \
         --name $aiHubName \
         --resource-group $resourceGroupName &>/dev/null; then
-        echo "$aiHubName already exists"
+        echo "AI Hub $aiHubName already exists"
     else
         # Create Azure AI Hub resource
-        echo "Creating $aiHubName"
+        echo "Creating AI Hub $aiHubName"
         if ! az ml workspace create \
             --resource-group $resourceGroupName \
             --name $aiHubName \
             --kind hub; then
-            echo "Failed to create $aiHubName"
+            echo "Failed to create AI Hub $aiHubName"
             exit 1
         fi
     fi
 
     # Check if project resource exists
-    if az ml project show \
+    if az ml workspace show \
         --name $projectName \
         --workspace-name $aiHubName \
         --resource-group $resourceGroupName &>/dev/null; then
-        echo "$projectName already exists"
+        echo "Project $projectName already exists"
     else
         hubID=$(az resource show --name $aiHubName --resource-group $resourceGroupName --resource-type Microsoft.MachineLearningServices/workspaces --query id --output tsv)
         # Create project resource
-        echo "Creating $projectName"
+        echo "Creating Project $projectName"
         if ! az ml workspace create \
             --kind project \
             --hub-id $hubID\
             --resource-group $resourceGroupName \
             --name $projectName; then          
-        echo "Failed to create $projectName"
+        echo "Failed to create Project $projectName"
         exit 1
         fi
     fi
 
-    # Check if Azure AI Search resource exists
-    if az search service show \
-         --name $searchName \
-         --resource-group $resourceGroupName &>/dev/null; then
-        echo "$searchName already exists"
-    else
-        # Create Azure AI Search resource
-        echo "Creating Search Service"
-        if ! az search service create \
-            --name $searchName \
-            --resource-group $resourceGroupName \
-            --location $location \
-            --sku $searchServiceSku \
-            --subscription $subscriptionID; then
-            echo "Failed to create $searchName"
-            exit 1
-        fi
-    fi
-
-    # Check if Azure OpenAI resource exists
+# Check if Azure OpenAI resource exists
     if az cognitiveservices account show \
         --name $aoaiName \
         --resource-group \
         $resourceGroupName &>/dev/null; then
-        echo "$aoaiName already exists"
+        echo "Azure OpenAI Service $aoaiName already exists"
     else
         # Create Azure OpenAI resource
-        echo "Creating $aoaiName"
+        echo "Creating Azure OpenAI Service $aoaiName"
         if ! az cognitiveservices account create \
             --name $aoaiName \
             --resource-group $resourceGroupName \
@@ -154,9 +136,9 @@ if [ "$1" == "setup" ]; then
         --resource-group $resourceGroupName \
         --name $aoaiName \
         --deployment-name $embeddingName &>/dev/null; then
-        echo "$embeddingName already exists"
+        echo "embedding $embeddingName already exists"
     else
-        echo "Creating $embeddingName deployment"
+        echo "Creating embedding $embeddingName deployment"
         # Create embedding deployment
         if ! az cognitiveservices account deployment create \
             --resource-group $resourceGroupName \
@@ -165,7 +147,7 @@ if [ "$1" == "setup" ]; then
             --model-format OpenAI \
             --model-name $embeddingName \
             --model-version $embeddingModelVersion; then
-            echo "Failed to create $embeddingName"
+            echo "Failed to create embedding $embeddingName"
             exit 1
         fi
     fi
@@ -175,10 +157,10 @@ if [ "$1" == "setup" ]; then
         --resource-group $resourceGroupName \
         --name $aoaiName \
         --deployment-name $completionName &>/dev/null; then
-        echo "$completionName already exists"
+        echo "GPT deployment $completionName already exists"
     else
         # Create GPT deployment
-        echo "Creating $completionName deployment"
+        echo "Creating GPT deployment $completionName deployment"
         if ! az cognitiveservices account deployment create \
             --resource-group $resourceGroupName \
             --name $aoaiName \
@@ -186,12 +168,31 @@ if [ "$1" == "setup" ]; then
             --model-format OpenAI \
             --model-name $completionName \
             --model-version $completionModelVersion; then
-            echo "Failed to create $completionName"
+            echo "Failed to create GPT deployment $completionName"
             exit 1
         fi
     fi
 
-    # Retrieve the REST API endpoint URL
+    # Check if Azure AI Search resource exists
+    if az search service show \
+         --name $searchName \
+         --resource-group $resourceGroupName &>/dev/null; then
+        echo "Search Service $searchName already exists"
+    else
+        # Create Azure AI Search resource
+        echo "Creating Search Service $searchName"
+        if ! az search service create \
+            --name $searchName \
+            --resource-group $resourceGroupName \
+            --location $location \
+            --sku $searchServiceSku \
+            --subscription $subscriptionID; then
+            echo "Failed to create Search Service $searchName"
+            exit 1
+        fi
+    fi
+
+    #Retrieve the REST API endpoint URL
     AOAIendpoint=$(az cognitiveservices account show --name $aoaiName --resource-group $resourceGroupName --query "properties.endpoint" -o tsv)
     if [ $? -ne 0 ]; then
         echo "Failed to retrieve AOAI endpoint URL"
@@ -241,13 +242,45 @@ if [ "$1" == "setup" ]; then
     
     echo "Resources created successfully"
 
-fi
 
+fi
 
 # Check if the flag is set to destroy resources
 if [ "$1" == "destroy" ]; then
     # Destroy resources
     echo "Destroying resources..."
+    
+# May have to delete deployments first...
+    # Delete embedding deployment
+    if az cognitiveservices account deployment show \
+        --resource-group $resourceGroupName \
+        --name $aoaiName \
+        --deployment-name $embeddingName &>/dev/null; then
+        az cognitiveservices account deployment delete \
+            --resource-group $resourceGroupName \
+            --name $aoaiName \
+            --deployment-name $embeddingName
+
+        echo "Embedding deployment $embeddingName deleted"
+    else
+        echo "Embedding deployment $embeddingName does not exist"
+    fi
+
+    # Delete GPT deployment
+    if az cognitiveservices account deployment show \
+        --resource-group $resourceGroupName \
+        --name $aoaiName \
+        --deployment-name $completionName &>/dev/null; then
+        az cognitiveservices account deployment delete \
+            --resource-group $resourceGroupName \
+            --name $aoaiName \
+            --deployment-name $completionName
+
+        echo "GPT deployment $completionName deleted"
+    else
+        echo "GPT deployment $completionName does not exist"
+
+    fi
 
     # Delete resource group
     if az group show --name $resourceGroupName &>/dev/null; then
@@ -258,7 +291,5 @@ if [ "$1" == "destroy" ]; then
     else
         echo "Resource group $resourceGroupName does not exist"
     fi
-    
-    echo "Resources destroyed successfully"
-    exit 0
+
 fi
