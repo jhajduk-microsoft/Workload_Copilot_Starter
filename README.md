@@ -64,7 +64,6 @@ After you run this script, the endpoints and keys for Azure OpenAI and Azure AI 
 - Select `Deploy`
 - Once you view the deployment page, you should be both Azure OpenAI models
 
-
 ## 3. Permissions
 
 - Add yourself to the Azure OpenAI resource in the portal as **Cognitive Services OpenAI Contributor** and **Cognitive Services Contributor**

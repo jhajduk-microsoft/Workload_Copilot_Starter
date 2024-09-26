@@ -17,7 +17,7 @@ In this guide, we’ll walk through multiple examples of deploying DSVMs using A
 
 The basic command to deploy a DSVM using the Azure CLI is:
 ```bash
-az vm create --resource-group <ResourceGroupName> --name <VMName> --image <ImageURN> --size <VMSize> --admin-username <AdminUser> --generate-ssh-keys
+az vm create --resource-group hack10 --name MyUbuntuDSVM --image microsoft-dsvm:ubuntu-2004:2004-gen2:latest --size Standard_DS3_v2 --admin-username azureuser --generate-ssh-keys
 ```
 
 ### Image URNs
@@ -31,7 +31,7 @@ The DSVMs are available under several different images in Azure. Below are some 
 This command creates an Ubuntu-based Data Science VM using the Standard_DS3_v2 size, which is suitable for general-purpose data science workloads.
 
 ```bash
-az vm create --resource-group MyResourceGroup --name MyUbuntuDSVM --image microsoft-dsvm:ubuntu-2004:2004-gen2:latest --size Standard_DS3_v2 --admin-username azureuser --generate-ssh-keys
+az vm create --resource-group hack10 --name MyUbuntuDSVM --image microsoft-dsvm:ubuntu-2004:2004-gen2:latest --size Standard_DS3_v2 --admin-username azureuser --generate-ssh-keys
 ```
 
 ## Example 3: Deploying a GPU-Enabled DSVM (NC6_Promo)
@@ -39,7 +39,7 @@ az vm create --resource-group MyResourceGroup --name MyUbuntuDSVM --image micros
 If you need GPU capabilities for deep learning, you can use the `Standard_NC6_Promo` SKU, which offers an NVIDIA Tesla K80 GPU.
 
 ```bash
-az vm create --resource-group MyResourceGroup --name MyGPUDSVM --image microsoft-dsvm:ubuntu-2004:2004-gen2:latest --size Standard_NC6_Promo --admin-username azureuser --generate-ssh-keys
+az vm create --resource-group hack10 --name MyGPUDSVM --image microsoft-dsvm:ubuntu-2004:2004-gen2:latest --size Standard_NC6_Promo --admin-username azureuser --generate-ssh-keys
 ```
 
 ## Conclusion
